@@ -1,1 +1,5 @@
 A Minecraft-like clone that I am making to learn more about OpenGL and programming in general.
+
+
+To compile (Linux), run the "compile.sh" script. You will need the OpenGL and GLFW development files to compile, which can usually be found in one of your default package manager's repositories or at "http://www.glfw.org".
+I am not entirely sure about how to compile this on Windows or Mac OS, but it should be relatively easy.
