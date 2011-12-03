@@ -12,6 +12,10 @@
 #define WINDOW_X 800
 #define WINDOW_Y 600
 
+#define CHUNK_X 8
+#define CHUNK_Y 8
+#define CHUNK_Z 8
+
 
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
@@ -19,40 +23,30 @@
 
 int window_x = WINDOW_X, window_y = WINDOW_Y;
 
-char title[256] = "Heightmap test";
+char title[256] = "Voxel test";
 
-int chunk[8][8][8] = \
-{
-	{{1,1}, {2,1}, {3,1}, {4,1}, {5,1}, {6,1}, {7,1}, {8,1}},
-	{{1,2}, {2,2}, {3,2}, {4,2}, {5,2}, {6,2}, {7,2}, {8,2}},
-	{{1,3}, {2,3}, {3,3}, {4,3}, {5,3}, {6,3}, {7,3}, {8,3}},
-	{{1,4}, {2,4}, {3,4}, {4,4}, {5,4}, {6,4}, {7,4}, {8,4}},
-	{{1,5}, {2,5}, {3,5}, {4,5}, {5,5}, {6,5}, {7,5}, {8,5}},
-	{{1,6}, {2,6}, {3,6}, {4,6}, {5,6}, {6,6}, {7,6}, {8,6}},
-	{{1,7}, {2,7}, {3,7}, {4,7}, {5,7}, {6,7}, {7,7}, {8,7}},
-	{{1,8}, {2,8}, {3,8}, {4,8}, {5,8}, {6,8}, {7,8}, {8,8}},
-};
+
+int testChunk[CHUNK_X][CHUNK_Y][CHUNK_Z];
+
 
 float rcolor[8] = {1.0f, 0.875f, 0.75f, 0.625f, 0.5f, 0.375f, 0.25f, 0.125f};
 float gcolor[8] = {1.0f, 0.875f, 0.75f, 0.625f, 0.5f, 0.375f, 0.25f, 0.125f};
 float bcolor[8] = {1.0f, 0.875f, 0.75f, 0.625f, 0.5f, 0.375f, 0.25f, 0.125f};
-
-int heightmap_x = 8;
-int heightmap_z = 8;
 					  
 int quit = 0;
 double tv0, tv1, tv2, tv3;
 int frames, frames2 = 0;
 double fps, fps2;
 
-int i = 0;
-int j = 0;
-
 float roty = 0.0f;
 float rotx = 0.0f;
 float posx = 0.0f;
 float posy = 0.0f;
 float posz = 0.0f;
+
+int i;
+int j;
+int k;
 
 
 ///////////////////////////////////////////////////////////
@@ -70,6 +64,8 @@ void drawcube(int x, int y, int z);
 void resize(int x, int y);
 
 void getFPS();
+
+void readChunk(char *filename, int chunk[CHUNK_X][CHUNK_Y][CHUNK_Z]);
 
 
 ///////////////////////////////////////////////////////////
@@ -105,7 +101,7 @@ int main(void){
 			
 		quit = glfwGetKey(GLFW_KEY_ESC) || (!glfwGetWindowParam(GLFW_OPENED));
 		
-		sprintf(title, "Heightmap test - %.1f FPS - %.1f FPS", (float)fps, (float)fps2);
+		sprintf(title, "Voxel test - %.1f FPS - %.1f FPS", (float)fps, (float)fps2);
 		glfwSetWindowTitle(title);
 
 	}
@@ -127,7 +123,7 @@ void rendersetup(){
 	glViewport(0, 0, window_x, window_y);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glFrustum(/*-1.0f*/-0.01f, /*1.0f*/0.01f, /*-1.0f*/-0.01f, /*1.0f*/0.01f, /*1.0f*/0.01f, 64.0f);
+	glFrustum(-0.01f, 0.01f, -0.01f, 0.01f, 0.01f, 64.0f);
 	glMatrixMode(GL_MODELVIEW);
 	
 	glEnable(GL_DEPTH_TEST);
@@ -141,6 +137,8 @@ void rendersetup(){
 void setup(){
 	
 	tv0 = glfwGetTime();
+	
+	readChunk("chunk.txt", &testChunk);
 
 }
 
@@ -163,42 +161,34 @@ void getinput(){
 	
 	if ( glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS ){
 		roty -= 1.0f;
-		printf("%f\n", roty);
 	}
 	if ( glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS ){
 		roty += 1.0f;
-		printf("%f\n", roty);
 	}
 	if ( glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS && rotx > -89.2f){
 		rotx -= 1.0f;
-		printf("%f\n", rotx);
 	}
 	if ( glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS && rotx < 89.2f){
 		rotx += 1.0f;
-		printf("%f\n", rotx);
 	}
 	
 	if ( glfwGetKey('W') == GLFW_PRESS ){
 		posx += sin(roty/57.2957795f)*-0.05f;
 		posz -= cos(roty/57.2957795f)*-0.05f;
 		posy -= sin(rotx/57.2957795f)*-0.05f;
-		printf("W\n");
 	}
 	if ( glfwGetKey('A') == GLFW_PRESS ){
 		posx += cos(roty/57.2957795f)*0.05f;
 		posz += sin(roty/57.2957795f)*0.05f;
-		printf("A\n");
 	}
 	if ( glfwGetKey('S')== GLFW_PRESS ){
 		posx -= sin(roty/57.2957795f)*-0.05f;
 		posz += cos(roty/57.2957795f)*-0.05f;
 		posy += sin(rotx/57.2957795f)*-0.05f;
-		printf("S\n");
 	}
 	if ( glfwGetKey('D') == GLFW_PRESS ){
 		posx -= cos(roty/57.2957795f)*0.05f;
 		posz -= sin(roty/57.2957795f)*0.05f;
-		printf("D\n");
 	}
 	if ( glfwGetKey(GLFW_KEY_SPACE) == GLFW_PRESS )
 		posy -= 0.05f;
@@ -222,17 +212,19 @@ void render(){
 	glRotatef(rotx, 1.0f, 0.0f, 0.0f);
 	glRotatef(roty, 0.0f, 1.0f, 0.0f);
 
-	glTranslatef(0.0f, 0.0f, -8.0f);
+	glTranslatef(0.0f, 0.0f, 0.0f);
 
 	glTranslatef(posx, posy, posz);
 
 
 	glPointSize(1.0f);
 
-		for ( i=0 ; i<heightmap_x ; i++ ){
-			for ( j=0 ; j<heightmap_z ; j++ ){
-				glColor3f(rcolor[heightmap[i][j][1]-1], gcolor[heightmap[i][j][1]-1], bcolor[heightmap[i][j][1]-1]);
-				drawcube(i, j, heightmap[i][j][0]);
+		for ( i=0 ; i<CHUNK_X ; i++ ){
+			for ( j=0 ; j<CHUNK_Z ; j++ ){
+				for ( k=0 ; k<CHUNK_Y ; k++){
+					glColor3f(rcolor[testChunk[i][j][k]], gcolor[testChunk[i][j][k]], bcolor[testChunk[i][j][k]]);
+					drawcube(i, j, k);
+				}
 			}
 		}
 
@@ -341,3 +333,22 @@ void drawcube(int x, int y, int z){
 
 
 ///////////////////////////////////////////////////////////
+
+
+void readChunk(char *filename, int chunk[CHUNK_X][CHUNK_Y][CHUNK_Z]){
+
+	FILE *f = fopen(filename, "r");
+	
+	for ( i=0 ; i<CHUNK_X ; i++ ){
+		for ( j=0 ; j<CHUNK_Z ; j++ ){
+			for ( k=0 ; k<CHUNK_Y ; k++){
+				fscanf(f, "%i", chunk[i][j][k]);
+				printf("%i\n", testChunk[i][j][k]);
+				printf("%i\n", chunk[i][j][k]);
+			}
+		}
+	}
+		
+	fclose(f);
+
+}
