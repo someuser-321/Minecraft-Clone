@@ -26,7 +26,7 @@ int window_x = WINDOW_X, window_y = WINDOW_Y;
 char title[256] = "Voxel test";
 
 
-int testChunk[CHUNK_X][CHUNK_Y][CHUNK_Z];
+int testChunk[CHUNK_X*CHUNK_Y*CHUNK_Z];
 
 
 float rcolor[8] = {1.0f, 0.875f, 0.75f, 0.625f, 0.5f, 0.375f, 0.25f, 0.125f};
@@ -64,8 +64,6 @@ void drawcube(int x, int y, int z);
 void resize(int x, int y);
 
 void getFPS();
-
-void readChunk(char *filename, int chunk[CHUNK_X][CHUNK_Y][CHUNK_Z]);
 
 
 ///////////////////////////////////////////////////////////
@@ -123,7 +121,7 @@ void rendersetup(){
 	glViewport(0, 0, window_x, window_y);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glFrustum(-0.01f, 0.01f, -0.01f, 0.01f, 0.01f, 64.0f);
+	glFrustum(-0.0075f, 0.0075f, -0.0075f, 0.0075f, 0.01f, 64.0f);
 	glMatrixMode(GL_MODELVIEW);
 	
 	glEnable(GL_DEPTH_TEST);
@@ -138,7 +136,19 @@ void setup(){
 	
 	tv0 = glfwGetTime();
 	
-	readChunk("chunk.txt", &testChunk);
+	FILE *f = fopen("chunk.txt", "r");
+	char tmp;
+	
+	for ( i=0 ; i<CHUNK_X ; i++ ){
+		for ( j=0 ; j<CHUNK_Y ; j++ ){
+			for ( k=0 ; k<CHUNK_Z ; k++ ){
+				tmp = fgetc(f);
+				testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k] = (int)(tmp - 48);
+			}
+		}
+	}
+	
+	fclose(f);
 
 }
 
@@ -222,7 +232,7 @@ void render(){
 		for ( i=0 ; i<CHUNK_X ; i++ ){
 			for ( j=0 ; j<CHUNK_Z ; j++ ){
 				for ( k=0 ; k<CHUNK_Y ; k++){
-					glColor3f(rcolor[testChunk[i][j][k]], gcolor[testChunk[i][j][k]], bcolor[testChunk[i][j][k]]);
+					glColor3f(rcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]], gcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]], bcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]]);
 					drawcube(i, j, k);
 				}
 			}
@@ -232,15 +242,15 @@ void render(){
 
 		glColor3f(1.0f, 0.0f, 0.0f);
 		glVertex3f(0.0f, 0.0f, 0.0f);
-		glVertex3f(1.0f, 0.0f, 0.0f);
+		glVertex3f(8.0f, 0.0f, 0.0f);
 
 		glColor3f(0.0f, 1.0f, 0.0f);
 		glVertex3f(0.0f, 0.0f, 0.0f);
-		glVertex3f(0.0f, 1.0f, 0.0f);
+		glVertex3f(0.0f, 8.0f, 0.0f);
 
 		glColor3f(0.0f, 0.0f, 1.0f);
 		glVertex3f(0.0f, 0.0f, 0.0f);
-		glVertex3f(0.0f, 0.0f, 1.0f);
+		glVertex3f(0.0f, 0.0f, 8.0f);
 
 	glEnd();
 
@@ -333,22 +343,3 @@ void drawcube(int x, int y, int z){
 
 
 ///////////////////////////////////////////////////////////
-
-
-void readChunk(char *filename, int chunk[CHUNK_X][CHUNK_Y][CHUNK_Z]){
-
-	FILE *f = fopen(filename, "r");
-	
-	for ( i=0 ; i<CHUNK_X ; i++ ){
-		for ( j=0 ; j<CHUNK_Z ; j++ ){
-			for ( k=0 ; k<CHUNK_Y ; k++){
-				fscanf(f, "%i", chunk[i][j][k]);
-				printf("%i\n", testChunk[i][j][k]);
-				printf("%i\n", chunk[i][j][k]);
-			}
-		}
-	}
-		
-	fclose(f);
-
-}

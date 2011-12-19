@@ -18,8 +18,8 @@ int main(){
 	for ( i=0 ; i<CHUNK_X ; i++ ){
 		for ( j=0 ; j<CHUNK_Z ; j++ ){
 			for ( k=0 ; k<CHUNK_Y ; k++){
-				srand(i*8*8 + j*8 + k);
-				fprintf(f, "%i", rand() % 8 + 1);
+				srand(i*CHUNK_X*CHUNK_Y + j*CHUNK_Y + k);
+				fprintf(f, "%i", rand() % 8);
 			}
 		}
 	}
