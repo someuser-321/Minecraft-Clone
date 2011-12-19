@@ -140,10 +140,10 @@ void setup(){
 	char tmp;
 	
 	for ( i=0 ; i<CHUNK_X ; i++ ){
-		for ( j=0 ; j<CHUNK_Y ; j++ ){
-			for ( k=0 ; k<CHUNK_Z ; k++ ){
+		for ( j=0 ; j<CHUNK_Z ; j++ ){
+			for ( k=0 ; k<CHUNK_Y ; k++ ){
 				tmp = fgetc(f);
-				testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k] = (int)(tmp - 48);
+				testChunk[(i*CHUNK_X*CHUNK_Z) + (j*CHUNK_Z) + k] = (int)(tmp - 48);
 			}
 		}
 	}
@@ -232,8 +232,10 @@ void render(){
 		for ( i=0 ; i<CHUNK_X ; i++ ){
 			for ( j=0 ; j<CHUNK_Z ; j++ ){
 				for ( k=0 ; k<CHUNK_Y ; k++){
-					glColor3f(rcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]], gcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]], bcolor[testChunk[(i*CHUNK_X*CHUNK_Y) + (j*CHUNK_Y) + k]]);
-					drawcube(i, j, k);
+					if ( testChunk[(i*CHUNK_X*CHUNK_Z) + (j*CHUNK_Z) + k] != 0 ){
+						glColor3f(rcolor[testChunk[(i*CHUNK_X*CHUNK_Z) + (j*CHUNK_Z) + k]], gcolor[testChunk[(i*CHUNK_X*CHUNK_Z) + (j*CHUNK_Z) + k]], bcolor[testChunk[(i*CHUNK_Z*CHUNK_Z) + (j*CHUNK_Z) + k]]);
+						drawcube(i, k, j);
+					}
 				}
 			}
 		}
